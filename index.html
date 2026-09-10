@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>유틸리티 웹사이트 (세계 시계 / 스톱워치 / 타이머)</title>
+  
+  <!-- [광고 안내] 구글 애드센스 승인 후 아래 주석을 해제하고 ca-pub 계정ID를 넣으세요. -->
+  <!-- 
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script> 
+  -->
+
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --accent: #0284c7;
+      --accent-light: #e0f2fe;
+      --border-color: #e2e8f0;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --sidebar-width: 240px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* === 좌측 사이드바 메뉴 === */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--card-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+    }
+
+    .sidebar .logo {
+      padding: 24px 20px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar .menu {
+      list-style: none;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar .menu-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .sidebar .menu-item:hover {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+    }
+
+    .sidebar .menu-item.active {
+      background-color: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* === 메인 컨텐츠 영역 === */
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .page-section {
+      display: none;
+    }
+
+    .page-section.active {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* === 광고 영역 === */
+    .ad-container {
+      width: 100%;
+      background-color: #f1f5f9;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+    }
+
+    /* === 세계 시계 & 공통 카드 디자인 === */
+    .tool-card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+    }
+
+    .main-clock .location-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1.1rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .main-clock .utc-offset {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+    }
+
+    .time-display {
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin: 10px 0;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .main-clock .date {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+    }
+
+    /* 공통 버튼 스타일 */
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+
+    .btn-secondary {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { background-color: var(--border-color); }
+
+    .btn-danger {
+      background-color: var(--danger-light);
+      color: var(--danger);
+    }
+    .btn-danger:hover { background-color: #fee2e2; }
+
+    /* 타이머 입력 폼 */
+    .timer-inputs {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .timer-inputs input {
+      width: 70px;
+      padding: 10px;
+      font-size: 1.5rem;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .timer-inputs input:focus {
+      border-color: var(--accent);
+    }
+
+    /* 랩 타임 목록 (스톱워치) */
+    .lap-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 15px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 10px;
+      text-align: left;
+    }
+
+    .lap-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    /* 드롭다운 & 검색 */
+    .dropdown-panel { position: relative; }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+
+    .dropdown-arrow {
+      position: absolute;
+      right: 14px;
+      pointer-events: none;
+      color: var(--text-sub);
+      font-size: 0.8rem;
+    }
+
+    .dropdown-list {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      z-index: 20;
+      display: none;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .dropdown-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .dropdown-item:hover { background-color: var(--accent-light); color: var(--accent); }
+
+    /* 도시 리스트 */
+    .city-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 15px;
+    }
+
+    .city-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .city-info .city-name { font-size: 1.05rem; font-weight: 600; }
+    .city-info .city-details { font-size: 0.8rem; color: var(--text-sub); }
+    .city-time { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+
+    .delete-btn {
+      position: absolute; top: 6px; right: 8px;
+      background: none; color: var(--text-sub);
+      border: none; cursor: pointer; padding: 2px 6px;
+    }
+    .delete-btn:hover { color: var(--danger); }
+
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; position: relative; border-right: none; border-bottom: 1px solid var(--border-color); }
+      .main-wrapper { margin-left: 0; padding: 20px 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 좌측 메뉴 사이드바 -->
+  <aside class="sidebar">
+    <div class="logo">⚡ My Utility</div>
+    <ul class="menu">
+      <li class="menu-item active" onclick="switchTab('worldClockTab', this)">
+        🌐 세계 시계
+      </li>
+      <li class="menu-item" onclick="switchTab('stopwatchTab', this)">
+        ⏱️ 스톱워치
+      </li>
+      <li class="menu-item" onclick="switchTab('timerTab', this)">
+        ⏲️ 타이머
+      </li>
+    </ul>
+  </aside>
+
+  <!-- 2. 메인 화면 영역 -->
+  <main class="main-wrapper">
+    <div class="container">
+
+      <!-- 상단 디스플레이 광고 영역 -->
+      <div class="ad-container">
+        <span>📢 광고 영역 (Google AdSense 위치)</span>
+      </div>
+
+      <!-- [페이지 1] 세계 시계 -->
+      <section id="worldClockTab" class="page-section active">
+        <div class="tool-card main-clock">
+          <div class="location-tag">
+            📍 <span id="mainLocation">내 위치</span>
+          </div>
+          <div class="utc-offset" id="mainUtc">UTC+0</div>
+          <div class="time-display" id="mainTime">00:00:00</div>
+          <div class="date" id="mainDate">YYYY년 MM월 DD일</div>
+        </div>
+
+        <div class="dropdown-panel" id="dropdownPanel">
+          <div class="input-wrapper">
+            <input type="text" id="cityInput" placeholder="도시 검색 (예: 뉴욕, London, 도쿄)..." autocomplete="off" />
+            <span class="dropdown-arrow">▼</span>
+          </div>
+          <div class="dropdown-list" id="dropdownList"></div>
+        </div>
+
+        <div class="city-list" id="cityList"></div>
+      </section>
+
+      <!-- [페이지 2] 스톱워치 -->
+      <section id="stopwatchTab" class="page-section">
+        <div class="tool-card">
+          <h2>⏱️ 스톱워치</h2>
+          <div class="time-display" id="swDisplay">00:00:00.00</div>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="swStartBtn" onclick="toggleStopwatch()">시작</button>
+            <button class="btn btn-secondary" id="swLapBtn" onclick="recordLap()" disabled>기록</button>
+            <button class="btn btn-danger" onclick="resetStopwatch()">초기화</button>
+          </div>
+          <div class="lap-list" id="lapList"></div>
+        </div>
+      </section>
+
+      <!-- [페이지 3] 타이머 -->
+      <section id="timerTab" class="page-section">
+        <div class="tool-card">
+          <h2>⏲️ 타이머</h2>
+          
+          <!-- 타이머 설정 입력창 -->
+          <div class="timer-inputs" id="timerInputs">
+            <input type="number" id="timerMin" min="0" max="99" value="05" placeholder="분"> 분
+            <input type="number" id="timerSec" min="0" max="59" value="00" placeholder="초"> 초
+          </div>
+
+          <!-- 타이머 남은 시간 표시 -->
+          <div class="time-display" id="timerDisplay">05:00</div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary" id="timerStartBtn" onclick="toggleTimer()">시작</button>
+            <button class="btn btn-danger" onclick="resetTimer()">초기화</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 하단 디스플레이 광고 영역 -->
+      <div class="ad-container">
+        <span>📢 광고 영역 (Google AdSense 위치)</span>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // === 1. 탭 전환 기능 ===
+    function switchTab(tabId, element) {
+      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+      element.classList.add('active');
+
+      document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // === 2. 세계 시계 기능 ===
+    const cityDatabase = [
+      { tz: 'America/New_York', nameKr: '뉴욕', nameEn: 'New York', country: '미국' },
+      { tz: 'Europe/London', nameKr: '런던', nameEn: 'London', country: '영국' },
+      { tz: 'Europe/Paris', nameKr: '파리', nameEn: 'Paris', country: '프랑스' },
+      { tz: 'Asia/Tokyo', nameKr: '도쿄', nameEn: 'Tokyo', country: '일본' },
+      { tz: 'Asia/Shanghai', nameKr: '상하이', nameEn: 'Shanghai', country: '중국' },
+      { tz: 'Asia/Bangkok', nameKr: '방콕', nameEn: 'Bangkok', country: '태국' },
+      { tz: 'Australia/Sydney', nameKr: '시드니', nameEn: 'Sydney', country: '호주' },
+      { tz: 'America/Los_Angeles', nameKr: '로스앤젤레스', nameEn: 'Los Angeles', country: '미국' },
+      { tz: 'Europe/Berlin', nameKr: '베를린', nameEn: 'Berlin', country: '독일' },
+      { tz: 'Asia/Dubai', nameKr: '두바이', nameEn: 'Dubai', country: '아랍에미리트' },
+      { tz: 'Pacific/Honolulu', nameKr: '호놀룰루', nameEn: 'Honolulu', country: '미국' }
+    ];
+
+    const allTimezones = Intl.supportedValuesOf('timeZone');
+    const existingTzs = new Set(cityDatabase.map(c => c.tz));
+
+    allTimezones.forEach(tz => {
+      if (!existingTzs.has(tz)) {
+        const parts = tz.split('/');
+        const cityEn = parts[parts.length - 1].replace(/_/g, ' ');
+        cityDatabase.push({ tz, nameKr: cityEn, nameEn: cityEn, country: parts[0] });
+      }
+    });
+
+    cityDatabase.forEach(item => {
+      item.searchStr = `${item.nameKr} ${item.nameEn} ${item.country} ${item.tz}`.toLowerCase();
+    });
+
+    let savedTimezones = ['America/New_York', 'Europe/London', 'Asia/Tokyo'];
+
+    function getUTCOffsetFormat(date, timeZone) {
+      try {
+        const options = { timeZone, timeZoneName: 'shortOffset' };
+        const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+        const tzPart = parts.find(p => p.type === 'timeZoneName');
+        if (!tzPart) return 'UTC';
+        let offset = tzPart.value.replace('GMT', 'UTC');
+        return offset === 'UTC' ? 'UTC+0' : offset;
+      } catch (e) { return 'UTC'; }
+    }
+
+    function initUserLocation() {
+      const date = new Date();
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      let regionName = userTimeZone;
+      const found = cityDatabase.find(c => c.tz === userTimeZone);
+      
+      if (found && found.nameKr !== found.nameEn) {
+        regionName = `${found.nameKr} (${found.nameEn})`;
+      } else if (userTimeZone.includes('/')) {
+        const parts = userTimeZone.split('/');
+        regionName = `${parts[1].replace(/_/g, ' ')} (${parts[0]})`;
+      }
+
+      if (userTimeZone === 'Asia/Seoul') regionName = '대한민국 (Seoul)';
+
+      document.getElementById('mainLocation').textContent = regionName;
+      document.getElementById('mainUtc').textContent = getUTCOffsetFormat(date, userTimeZone);
+    }
+
+    function updateMainClock() {
+      const now = new Date();
+      document.getElementById('mainTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      document.getElementById('mainDate').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+    }
+
+    function updateSubClocks() {
+      const container = document.getElementById('cityList');
+      container.innerHTML = '';
+      const now = new Date();
+
+      savedTimezones.forEach((timeZone, index) => {
+        try {
+          const timeFormatter = new Intl.DateTimeFormat('ko-KR', { timeZone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+          const dateFormatter = new Intl.DateTimeFormat('ko-KR', { timeZone, month: 'numeric', day: 'numeric', weekday: 'short' });
+          const itemData = cityDatabase.find(c => c.tz === timeZone);
+          const cityName = itemData ? (itemData.nameKr !== itemData.nameEn ? `${itemData.nameKr} (${itemData.nameEn})` : itemData.nameKr) : timeZone.split('/').pop().replace(/_/g, ' ');
+
+          const card = document.createElement('div');
+          card.className = 'city-card';
+          card.innerHTML = `
+            <button class="delete-btn" onclick="removeCity(${index})">✕</button>
+            <div class="city-info">
+              <div class="city-name">${cityName}</div>
+              <div class="city-details">${dateFormatter.format(now)} · ${getUTCOffsetFormat(now, timeZone)}</div>
+            </div>
+            <div class="city-time">${timeFormatter.format(now)}</div>
+          `;
+          container.appendChild(card);
+        } catch (e) {}
+      });
+    }
+
+    const input = document.getElementById('cityInput');
+    const listEl = document.getElementById('dropdownList');
+    const panel = document.getElementById('dropdownPanel');
+
+    function renderList(filterText = '') {
+      listEl.innerHTML = '';
+      const query = filterText.trim().toLowerCase();
+      const matches = query ? cityDatabase.filter(item => item.searchStr.includes(query)) : cityDatabase;
+
+      if (matches.length === 0) {
+        listEl.innerHTML = '<div class="dropdown-item" style="color:var(--text-sub)">검색 결과가 없습니다.</div>';
+        return;
+      }
+
+      matches.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'dropdown-item';
+        div.innerHTML = `<span><strong>${item.nameKr !== item.nameEn ? `${item.nameKr} (${item.nameEn})` : item.nameKr}</strong> · ${item.country}</span><span style="color:var(--text-sub); font-size:0.8rem;">${item.tz}</span>`;
+        div.onclick = () => { addCity(item.tz); closeDropdown(); };
+        listEl.appendChild(div);
+      });
+    }
+
+    function openDropdown() { panel.classList.add('open'); listEl.style.display = 'block'; renderList(input.value); }
+    function closeDropdown() { panel.classList.remove('open'); listEl.style.display = 'none'; input.value = ''; }
+
+    input.addEventListener('focus', openDropdown);
+    input.addEventListener('click', openDropdown);
+    input.addEventListener('input', (e) => { openDropdown(); renderList(e.target.value); });
+    document.addEventListener('click', (e) => { if (!e.target.closest('#dropdownPanel')) closeDropdown(); });
+
+    function addCity(tz) {
+      if (!savedTimezones.includes(tz)) { savedTimezones.push(tz); updateSubClocks(); }
+      else { alert('이미 추가된 도시입니다.'); }
+    }
+    function removeCity(index) { savedTimezones.splice(index, 1); updateSubClocks(); }
+
+    setInterval(() => { updateMainClock(); updateSubClocks(); }, 1000);
+    initUserLocation(); updateMainClock(); updateSubClocks();
+
+
+    // === 3. 스톱워치 기능 ===
+    let swInterval = null;
+    let swElapsedTime = 0;
+    let swIsRunning = false;
+    let lapCount = 0;
+
+    function formatSwTime(ms) {
+      const hrs = Math.floor(ms / 3600000);
+      const mins = Math.floor((ms % 3600000) / 60000);
+      const secs = Math.floor((ms % 60000) / 1000);
+      const cs = Math.floor((ms % 1000) / 10);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(hrs)}:${pad(mins)}:${pad(secs)}.${pad(cs)}`;
+    }
+
+    function toggleStopwatch() {
+      const btn = document.getElementById('swStartBtn');
+      const lapBtn = document.getElementById('swLapBtn');
+
+      if (!swIsRunning) {
+        // 시작
+        const startTime = Date.now() - swElapsedTime;
+        swInterval = setInterval(() => {
+          swElapsedTime = Date.now() - startTime;
+          document.getElementById('swDisplay').textContent = formatSwTime(swElapsedTime);
+        }, 10);
+        swIsRunning = true;
+        btn.textContent = '일시정지';
+        btn.classList.replace('btn-primary', 'btn-secondary');
+        lapBtn.disabled = false;
+      } else {
+        // 일시정지
+        clearInterval(swInterval);
+        swIsRunning = false;
+        btn.textContent = '재개';
+        btn.classList.replace('btn-secondary', 'btn-primary');
+        lapBtn.disabled = true;
+      }
+    }
+
+    function recordLap() {
+      if (!swIsRunning) return;
+      lapCount++;
+      const lapList = document.getElementById('lapList');
+      const item = document.createElement('div');
+      item.className = 'lap-item';
+      item.innerHTML = `<span>기록 ${lapCount}</span><span>${formatSwTime(swElapsedTime)}</span>`;
+      lapList.prepend(item);
+    }
+
+    function resetStopwatch() {
+      clearInterval(swInterval);
+      swElapsedTime = 0;
+      swIsRunning = false;
+      lapCount = 0;
+      document.getElementById('swDisplay').textContent = '00:00:00.00';
+      document.getElementById('swStartBtn').textContent = '시작';
+      document.getElementById('swStartBtn').className = 'btn btn-primary';
+      document.getElementById('swLapBtn').disabled = true;
+      document.getElementById('lapList').innerHTML = '';
+    }
+
+
+    // === 4. 타이머 기능 ===
+    let timerInterval = null;
+    let timerRemainingSec = 0;
+    let timerIsRunning = false;
+
+    function updateTimerDisplay(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      const pad = (n) => String(n).padStart(2, '0');
+      document.getElementById('timerDisplay').textContent = `${pad(mins)}:${pad(secs)}`;
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('timerStartBtn');
+      const minInput = document.getElementById('timerMin');
+      const secInput = document.getElementById('timerSec');
+
+      if (!timerIsRunning) {
+        // 시작
+        if (timerRemainingSec <= 0) {
+          const mins = parseInt(minInput.value) || 0;
+          const secs = parseInt(secInput.value) || 0;
+          timerRemainingSec = (mins * 60) + secs;
+        }
+
+        if (timerRemainingSec <= 0) {
+          alert('1초 이상의 시간을 설정해 주세요.');
+          return;
+        }
+
+        document.getElementById('timerInputs').style.display = 'none';
+        updateTimerDisplay(timerRemainingSec);
+
+        timerInterval = setInterval(() => {
+          timerRemainingSec--;
+          updateTimerDisplay(timerRemainingSec);
+
+          if (timerRemainingSec <= 0) {
+            clearInterval(timerInterval);
+            timerIsRunning = false;
+            alert('🔔 설정한 타이머 시간이 종료되었습니다!');
+            resetTimer();
+          }
+        }, 1000);
+
+        timerIsRunning = true;
+        btn.textContent = '일시정지';
+        btn.classList.replace('btn-primary', 'btn-secondary');
+      } else {
+        // 일시정지
+        clearInterval(timerInterval);
+        timerIsRunning = false;
+        btn.textContent = '재개';
+        btn.classList.replace('btn-secondary', 'btn-primary');
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerRemainingSec = 0;
+      timerIsRunning = false;
+
+      document.getElementById('timerInputs').style.display = 'flex';
+      document.getElementById('timerStartBtn').textContent = '시작';
+      document.getElementById('timerStartBtn').className = 'btn btn-primary';
+      
+      const mins = parseInt(document.getElementById('timerMin').value) || 0;
+      const secs = parseInt(document.getElementById('timerSec').value) || 0;
+      updateTimerDisplay((mins * 60) + secs);
+    }
+
+    // 타이머 입력값 변경 시 실시간 반영
+    document.getElementById('timerMin').addEventListener('input', resetTimer);
+    document.getElementById('timerSec').addEventListener('input', resetTimer);
+  </script>
+</body>
+</html>
